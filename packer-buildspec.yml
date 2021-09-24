@@ -1,0 +1,45 @@
+version: 0.2
+env:
+  variables:
+    S3_BUCKET: "my-website-bucket"
+phases:
+  install:
+    commands:
+      - ls -ltr
+      - echo "Installing HashiCorp Packer..."
+      - curl -qL -o packer.zip https://releases.hashicorp.com/packer/1.7.2/packer_1.7.2_linux_amd64.zip && unzip packer.zip
+      - ls -la
+  pre_build:
+    commands:
+      - export base_image_id=${ami_id}
+      - echo $base_image_id
+      - initiator_email=`echo ${CODEBUILD_INITIATOR} | awk -F '/' '{print $2}'`
+      - echo ${initiator_email}
+      - role_arn=$assume_role_arn
+      - role_session_name='packer-codebuild-job'
+      - echo "Assuming Role"
+      - sh assume-role.sh $role_arn $role_session_name
+      - export AWS_PROFILE=$role_session_name
+      - asset_insight_id=`echo $CODEBUILD_BUILD_ID | awk -F '-' '{print $1}'`
+      - echo $asset_insight_id
+      - aws ec2 create-key-pair --key-name $asset_insight_id-keypair --query 'KeyMaterial' --output text > $asset_insight_id-keypair.pem
+      - chmod 400 a207947-keypair.pem
+      - ls -ltr
+      - export base_image_id=`aws ssm get-parameters --with-decryption --names "${ami_id}"  --query 'Parameters[*].Value' --output text`
+      - echo ${base_image_id}
+      - aws ssm put-parameter --name /$asset_insight_id/$env_name"-NovusAMIId" --value $base_image_id --type String --tier Standard
+      - sh scripts/update_base_ami.sh
+      - sh scripts/update_s3_path.sh
+      - pwd
+  build:
+    commands:
+      - ./packer build -var-file "vars/$env_name/$env_name.json" "novusimage.json"
+      - ls -ltr
+  post_build:
+    commands:
+      - rm -rf $asset_insight_id-keypair.pem
+      - aws ec2 delete-key-pair --key-name $asset_insight_id-keypair
+      - cat packer-artifact-manifest.json | grep -Po 'ami-.*' | awk 'BEGIN{ORS="";}{for (i=1; i<=NF; i++) {print substr($i, 1, length($i)-2); print " "}}END{print "\n"}' > image
+      - pwd
+      - ls -la
+      - cat image

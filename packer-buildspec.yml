@@ -8,8 +8,8 @@ phases:
       - echo $base_image_id
       - assume_role_arn='arn:aws:iam::255679434152:role/human-role/a207947-PowerUser2'
       - env_name=dev
-      - role_arn=$assume_role_arn
-      - role_session_name='packer-codebuild-job'
+      - role_arn='arn:aws:iam::255679434152:role/human-role/a207947-PowerUser2'
+      - role_session_name='packercodebuildjob'
       - echo "Assuming Role"
       - sh assume-role.sh $role_arn $role_session_name
       - export AWS_PROFILE=$role_session_name

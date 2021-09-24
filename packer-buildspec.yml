@@ -6,7 +6,7 @@ phases:
   pre_build:
     commands:
       - echo $base_image_id
-      - assume_role_arn=arn:aws:iam::255679434152:role/human-role/a207947-PowerUser2
+      - assume_role_arn='arn:aws:iam::255679434152:role/human-role/a207947-PowerUser2'
       - env_name=dev
       - role_arn=$assume_role_arn
       - role_session_name='packer-codebuild-job'
@@ -16,10 +16,9 @@ phases:
       - asset_insight_id=`echo $CODEBUILD_BUILD_ID | awk -F '-' '{print $1}'`
       - echo $asset_insight_id
       - ls -ltr
-      - aws sts get-caller-identity 
+      - aws sts get-caller-identity
       - ${!AWS_@}
-      - aws sts get-caller-identity 
-
+      - aws sts get-caller-identity
       - pwd
   build:
     commands:

@@ -2,7 +2,7 @@
 role_arn=$1
 role_session_name=$2
 profile_name=$2
-temp_role=$(aws sts assume-role --role-arn $role_arn --role-session-name $role_session_name)
+temp_role=$(aws sts assume-role --role-arn $role_arn --role-session-name \$role_session_name)
 echo "exporting  variables"
 export AWS_ACCESS_KEY_ID=$(echo $temp_role | jq -r .Credentials.AccessKeyId)
 export AWS_SECRET_ACCESS_KEY=$(echo $temp_role | jq -r .Credentials.SecretAccessKey)
